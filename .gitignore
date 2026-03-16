@@ -1,5 +1,13 @@
 .gemini/
 .venv/
 docs/
-.env/
-*/__pycache__/
+.env
+schema/__pycache__/
+script/__pycache__/
+utils/__pycache__/
+src/backtest/__pycache__/
+src/data/__pycache__/
+src/features/__pycache__/
+src/strategy/__pycache__/
+src/risk/__pycache__/
+src/models/__pycache__/
