@@ -11,3 +11,4 @@ src/features/__pycache__/
 src/strategy/__pycache__/
 src/risk/__pycache__/
 src/models/__pycache__/
+dataset/processed/
