@@ -21,12 +21,9 @@ SAGEMAKER_ENDPOINT_NAME = os.getenv("SAGEMAKER_ENDPOINT_NAME")
 
 runtime = boto3.client("sagemaker-runtime", region_name=AWS_REGION)
 
-print("=" * 60)
 print(" SageMaker Endpoint Test")
-print("=" * 60)
 print(f"Endpoint: {SAGEMAKER_ENDPOINT_NAME}")
 print(f"Region: {AWS_REGION}")
-print("=" * 60)
 
 
 def invoke(payload: dict | list, label: str):
@@ -54,10 +51,7 @@ def invoke(payload: dict | list, label: str):
     except Exception as e:
         print(f"FAILED: {e}")
 
-
-
-# Test 1 — Single row (bullish-looking signal)
-
+# Single row (bullish-looking signal)
 invoke(
     payload={
         "sma_20": 155.23,
@@ -70,7 +64,7 @@ invoke(
     label="Single row — bullish signal",
 )
 
-# Test 2 — Single row (bearish-looking signal)
+# Single row (bearish-looking signal)
 invoke(
     payload={
         "sma_20": 142.10,
@@ -83,7 +77,7 @@ invoke(
     label="Single row — bearish signal",
 )
 
-# Test 3 — Batch (multiple rows)
+# Batch (multiple rows)
 invoke(
     payload=[
         {
@@ -117,4 +111,3 @@ print(f"\n{'='*60}")
 print("  All tests complete.")
 # print("  Delete the endpoint after testing!")
 # print("  Run: aws sagemaker delete-endpoint --endpoint-name", SAGEMAKER_ENDPOINT_NAME)
-print("=" * 60)

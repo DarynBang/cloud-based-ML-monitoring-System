@@ -13,7 +13,7 @@ FEATURE_COLS = [
     "macd_hist",
 ]
 LABEL_MAP = {0: "DOWN", 1: "NEUTRAL", 2: "UP"}
-# 1. model_fn  — called once at container startup
+
 def model_fn(model_dir: str):
     """
     Load model.joblib from the SageMaker model directory.
@@ -29,7 +29,7 @@ def model_fn(model_dir: str):
     print(f"[inference] Model loaded from {model_path}")
     return model
 
-# 2. input_fn  — deserialize raw request bytes into a DataFrame
+# input_fn, deserialize raw request bytes into a DataFrame
 def input_fn(request_body: str, content_type: str = "application/json"):
     """
     Accept JSON in two shapes:
@@ -56,7 +56,7 @@ def input_fn(request_body: str, content_type: str = "application/json"):
 
     return df[FEATURE_COLS]  # enforce column order
 
-# 3. predict_fn  — run the model
+# predict_fn, run the model
 def predict_fn(input_data: pd.DataFrame, model):
     """
     Returns a dict with predicted class indices and probabilities.
@@ -80,7 +80,7 @@ def predict_fn(input_data: pd.DataFrame, model):
     return results
 
 
-# 4. output_fn  — serialize predictions back to JSON
+# output_fn, serialize predictions back to JSON
 def output_fn(predictions: list, accept: str = "application/json"):
     """
     Serialize the prediction list to a JSON string.
