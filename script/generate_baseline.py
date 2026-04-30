@@ -63,8 +63,8 @@ def main():
         }, f, indent=2)
         
     logger.info(f"Baseline constraints saved to: {output_path}")
-    print(f"
-[OK] Baseline generated for {len(baseline_stats)} features.")
+    print(f"[OK] Baseline generated for {len(baseline_stats)} features.")
+
 
 if __name__ == "__main__":
     main()

@@ -21,8 +21,7 @@ from src.backtest.engine import VectorizedBacktester
 logger = setup_logger(name="trading_system.walk_forward", level=CONFIG.get("logging", {}).get("level", "INFO"))
 
 def main():
-    print("
-" + "="*60)
+    print("" + "="*60)
     print(f"{'WALK-FORWARD CONTINUAL LEARNING SIMULATION':^60}")
     print("="*60)
 
@@ -124,8 +123,7 @@ def main():
     metrics = backtester.calculate_metrics(results_df)
 
     # 6. Hiển thị kết quả so sánh
-    print("
-" + "="*60)
+    print("" + "="*60)
     print(f"{'WALK-FORWARD PERFORMANCE SUMMARY':^60}")
     print("="*60)
     
@@ -138,8 +136,7 @@ def main():
         ["Simulated Period", f"{df_final_signals['date'].min().date()} to {df_final_signals['date'].max().date()}"]
     ]
     print(tabulate(summary, tablefmt="psql"))
-    print("="*60 + "
-")
+    print("="*60 + "")
 
 if __name__ == "__main__":
     main()

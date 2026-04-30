@@ -17,6 +17,7 @@ import boto3
 import sagemaker
 from sagemaker.sklearn.model import SKLearnModel
 from dotenv import load_dotenv
+from sagemaker.model_monitor import DataCaptureConfig      # Add Data Capture
 
 
 # Load environment variables from .env
@@ -90,10 +91,20 @@ print(f" Model object created: {SAGEMAKER_MODEL_NAME}")
 print(f"\n[3/4] Deploying endpoint '{SAGEMAKER_ENDPOINT_NAME}'")
 print(f" Instance type : {SAGEMAKER_INSTANCE_TYPE}")
 
+
+data_capture_config = DataCaptureConfig(
+    enable_capture=True,
+    sampling_percentage=100,
+    destination_s3_uri=f"s3://{S3_BUCKET_NAME}/data-capture/"
+)
+
+print(f"Created DATA CAPTURE CONFIG")
+
 predictor = sklearn_model.deploy(
     initial_instance_count=1,
     instance_type=SAGEMAKER_INSTANCE_TYPE,
     endpoint_name=SAGEMAKER_ENDPOINT_NAME,
+    data_capture_config=data_capture_config,    # NEW
 )
 
 print(f"\n[4/4]Endpoint deployed successfully!")

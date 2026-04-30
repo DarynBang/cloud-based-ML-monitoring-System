@@ -157,3 +157,219 @@ Defined in `schema/stock.py`. A request payload should contain stock feature fie
 ```
 Where `1` = bullish signal, `0` = bearish signal (or similar depending on your training target).
 ---
+
+
+----
+# Model Monitoring Guide
+
+This phase implements an **end-to-end monitoring pipeline** for a deployed machine learning model on AWS SageMaker.
+
+It includes:
+- Real-time inference monitoring
+- Alerting via SNS
+- Drift detection via Lambda
+- Observability via CloudWatch dashboards
+
+
+## System Architecture
+
+`Inference → Data Capture (stored in S3) → Lambda → CloudWatch → SNS → Email Alert`
+
+In short:
+- **SageMaker** → Serves model as an endpoint
+- **S3** → Stores inference logs
+- **Lambda** → Computes drift
+- **CloudWatch** → Stores metrics, alarms, and dashboard for visualization
+- **SNS** → Sends notifications via email
+
+---
+## Setup Overview
+
+1. Ensure model is deployed to Sagemaker (with Data Capture enabled)
+2. Configure SNS topic
+3. Create CloudWatch alarms
+4. Deploy Lambda for drift detection
+5. Visualize metrics in CloudWatch Dashboard
+
+---
+## SNS Setup (Alerts)
+
+1. Go to Amazon SNS Console
+2. Create a topic (e.g., `stock-alerts-topic`)
+3. Create subscription (Email)
+4. Confirm subscription via email
+
+---
+## CloudWatch Metrics
+
+We set up and monitor:
+- ModelLatency
+- Invocation5XXErrors
+- Invocations
+- Custom Drift Metric (Created via Lambda)
+
+**NOTE:** 
+To create a CloudWatch alarm based on a custom metric, you must 
+first publish the metric data to CloudWatch (via Lambda in our case) so it exists in the repository, 
+and then configure the alarm to monitor that specific metric.
+
+---
+## CloudWatch Alarms
+
+Example:
+
+- Latency Alarm:
+  - Metric: **ModelLatency**
+  - Threshold: > 1000 ms
+
+- Client/Server Error Alarms:
+  - Metric(s): **Invocation5XXErrors**, **Invocation4XXErrors** 
+  - Threshold: > 0 (For demonstration purposes)
+
+- Drift Alarm:
+  - Metric: Custom/Drift → **FeatureDrift**
+  - Threshold: > 0.5
+
+Ensure the Endpoint Name for the alarms are correct, and that the alarms are connected to the SNS topic. 
+
+**Example of how the Alarms should look**
+![CloudWatch Alarms](./img/cloudwatch_alarms.png)
+
+---
+## Lambda Drift Detection
+
+The Lambda function:
+1. Reads captured inference data from S3
+2. Loads baseline statistics (also stored in S3)
+3. Computes feature-wise drift
+4. Aggregates into a drift score
+5. Pushes metric to CloudWatch
+
+**Code for Lambda Function:**
+```
+import boto3
+import json
+import pandas as pd
+from io import BytesIO
+
+s3 = boto3.client("s3")
+cloudwatch = boto3.client("cloudwatch")
+
+BUCKET = "your-bucket-name"
+
+CAPTURE_KEY = "data-capture/..." # Only available after running test_endpoint.py
+
+BASELINE_KEY = "baseline/baseline_stats.json"
+
+FEATURES = ["sma_20", "sma_50", "rsi_14", "macd", "macd_signal", "macd_hist"]
+
+
+def lambda_handler(event, context):
+    print("=== Lambda Drift Detection Started ===")
+
+    # 1. Load baseline stats
+    obj = s3.get_object(Bucket=BUCKET, Key=BASELINE_KEY)
+    baseline_stats = json.loads(obj["Body"].read().decode())
+
+    print("Loaded baseline stats")
+
+    # 2. Load captured data
+    obj = s3.get_object(Bucket=BUCKET, Key=CAPTURE_KEY)
+
+    rows = []
+    for line in obj["Body"].read().decode().splitlines():
+        record = json.loads(line)
+        raw = record["captureData"]["endpointInput"]["data"]
+        parsed = json.loads(raw)
+
+        if isinstance(parsed, dict):
+            rows.append(parsed)
+        else:
+            rows.extend(parsed)
+
+    df = pd.DataFrame(rows)
+
+    print(f"Captured rows: {len(df)}")
+
+
+    # 3. Compute drift
+    drift_scores = {}
+
+    for col in FEATURES:
+        base_mean = baseline_stats[col]["mean"]
+        live_mean = df[col].mean()
+
+        diff = abs(live_mean - base_mean)
+        scale = abs(base_mean) + 1e-6
+
+        score = min(diff / scale, 1.0)
+        drift_scores[col] = score
+
+    final_drift = sum(drift_scores.values()) / len(drift_scores)
+
+    print("Drift scores:", drift_scores)
+    print("Final drift:", final_drift)
+
+    # 4. Push metric to CloudWatch
+    cloudwatch.put_metric_data(
+        Namespace="Custom/Drift",
+        MetricData=[
+            {
+                "MetricName": "FeatureDrift",
+                "Value": float(final_drift),
+                "Unit": "None"
+            }
+        ]
+    )
+
+    print("Metric pushed to CloudWatch")
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({
+            "drift": final_drift
+        })
+    }
+```
+
+
+**NOTE:** In order for the Lambda Function to work properly, you need to do the following:
+- Add a Layer to Lambda Function on the console → Select `AWSSDKPandas-Python3x`
+- Give permission to read on S3. IAM → ROLES → `AmazonS3ReadOnlyAccess`
+- Give permission to write metrics to CloudWatch. IAM → ROLES → `CloudWatchFullAccess`
+
+
+### Data Capture
+
+SageMaker writes inference requests to:
+
+`s3://your-bucket-name/data-capture/`
+
+This data is used for drift detection.
+
+### Trigger
+- Currently being done manually on Lambda (for testing)
+- Can be scheduled via EventBridge (Future Works)
+
+
+**Updated S3 structure**
+```
+s3://your-bucket-name/
+├── models/
+│   └── model.tar.gz # Packaged model artifact
+├── baseline/
+│   └── cleaned_stocks.parquet # Used for drift baseline
+│   └── baseline_stats.json (NEW)
+└── data-capture/ # Inference logs will be used to compare with baseline statistics
+```
+
+---
+## CloudWatch Dashboard
+
+The dashboard includes:
+
+- Latency
+- Errors (Client/Server)
+- Drift metric
+
+![CloudWatch Dashboard](./img/cloudwatch_dashboard.png)
