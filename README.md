@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # First setup
 ```bash
 make venv
@@ -373,3 +374,6 @@ The dashboard includes:
 - Drift metric
 
 ![CloudWatch Dashboard](./img/cloudwatch_dashboard.png)
+=======
+# cloud-based-ML-monitoring-System
+>>>>>>> 680cf3c61e45b7fd61f8de92b505f830ac00072a
