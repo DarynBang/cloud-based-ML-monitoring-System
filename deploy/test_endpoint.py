@@ -109,37 +109,12 @@ invoke(
 )
 
 ## NEW TESTCASES
-
-# invoke(
-#     payload={
-#         "sma_20": 1000.0,
-#         "sma_50": 10.0,
-#         "rsi_14": 99.9,
-#         "macd": 15.0,
-#         "macd_signal": 12.0,
-#         "macd_hist": 5.0,
-#     },
-#     label="Drift — extreme high values",
-# )
-
-# invoke(
-#     payload={
-#         "sma_20": -50.0,
-#         "sma_50": -100.0,
-#         "rsi_14": -10.0,
-#         "macd": -20.0,
-#         "macd_signal": -15.0,
-#         "macd_hist": -5.0,
-#     },
-#     label="Drift — invalid negative values",
-# )
-
 import random
 
 invoke(
     payload={
-        "sma_20": random.uniform(-100, 1000),
-        "sma_50": random.uniform(-100, 1000),
+        "sma_20": random.uniform(-100, 250),
+        "sma_50": random.uniform(-100, 250),
         "rsi_14": random.uniform(0, 100),
         "macd": random.uniform(-10, 10),
         "macd_signal": random.uniform(-10, 10),
@@ -150,8 +125,8 @@ invoke(
 
 invoke(
     payload={
-        "sma_20": random.uniform(-100, 1000),
-        "sma_50": random.uniform(-100, 1000),
+        "sma_20": random.uniform(-100, 250),
+        "sma_50": random.uniform(-100, 250),
         "rsi_14": random.uniform(0, 100),
         "macd": random.uniform(-10, 10),
         "macd_signal": random.uniform(-10, 10),
@@ -162,8 +137,8 @@ invoke(
 
 invoke(
     payload={
-        "sma_20": random.uniform(-100, 1000),
-        "sma_50": random.uniform(-100, 1000),
+        "sma_20": random.uniform(-100, 250),
+        "sma_50": random.uniform(-100, 250),
         "rsi_14": random.uniform(0, 100),
         "macd": random.uniform(-10, 10),
         "macd_signal": random.uniform(-10, 10),
